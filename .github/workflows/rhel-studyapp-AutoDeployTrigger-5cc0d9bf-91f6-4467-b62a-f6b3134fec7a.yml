@@ -41,7 +41,7 @@ jobs:
           registryPassword: ${{ secrets.RHELSTUDYAPP_REGISTRY_PASSWORD }}
           containerAppName: rhel-studyapp
           resourceGroup: NetworkWatcherRG
-          imageToBuild: docker.io/conallmurphy/rhcsa-practice:0.1.0/rhel-studyapp:${{ github.sha }}
+          imageToBuild: docker.io/conallmurphy/rhcsa-practice:0.1.0-rhel-studyapp-${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
