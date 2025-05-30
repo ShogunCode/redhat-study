@@ -1,0 +1,91 @@
+# app/data/questions/networking.yaml
+# ---------------------------------------------------------------
+# RHCSA I – Networking drills
+# ---------------------------------------------------------------
+
+# ───────── Interface inspection ──────────
+- id: 201
+  objective: "Display all IPv4 addresses assigned to interfaces"
+  patterns:
+    - '^ip\\s+addr\\s+show$'
+    - '^ip\\s+a$'
+
+- id: 202
+  objective: "Show the link status of interface eth0 only"
+  patterns:
+    - '^ip\\s+link\\s+show\\s+eth0$'
+    - '^ip\\s+l\\s+s\\s+eth0$'
+
+# ───────── Hostname ──────────
+- id: 203
+  objective: "Set the static hostname to server01.example.com (persistent)"
+  patterns:
+    - '^hostnamectl\\s+set-hostname\\s+server01\\.example\\.com$'
+
+# ───────── Static IP with nmcli ──────────
+- id: 204
+  objective: "Add a new connection static0 on eth0 with IP 192.168.1.50/24"
+  patterns:
+    - '^nmcli\\s+con\\s+add\\s+type\\s+ethernet\\s+ifname\\s+eth0\\s+con-name\\s+static0\\s+ipv4\\.address\\s+192\\.168\\.1\\.50/24\\s+ipv4\\.method\\s+manual$'
+
+- id: 205
+  objective: "Set the default gateway for connection static0 to 192.168.1.1"
+  patterns:
+    - '^nmcli\\s+con\\s+mod\\s+static0\\s+ipv4\\.gateway\\s+192\\.168\\.1\\.1$'
+
+- id: 206
+  objective: "Activate the connection static0 now"
+  patterns:
+    - '^nmcli\\s+con\\s+up\\s+static0$'
+    - '^nmcli\\s+connection\\s+up\\s+static0$'
+
+# ───────── DNS ──────────
+- id: 207
+  objective: "Add 8.8.8.8 as DNS server to connection static0"
+  patterns:
+    - '^nmcli\\s+con\\s+mod\\s+static0\\s+ipv4\\.dns\\s+8\\.8\\.8\\.8$'
+
+# ───────── Firewalld ──────────
+- id: 208
+  objective: "Open the HTTP service permanently in the public zone"
+  patterns:
+    - '^firewall-cmd\\s+--permanent\\s+--zone=public\\s+--add-service=http$'
+
+- id: 209
+  objective: "Reload the firewall to apply permanent changes"
+  patterns:
+    - '^firewall-cmd\\s+--reload$'
+
+- id: 210
+  objective: "List all active firewall rules in the public zone"
+  patterns:
+    - '^firewall-cmd\\s+--zone=public\\s+--list-all$'
+
+# ───────── Simple routing ──────────
+- id: 211
+  objective: "Display the current routing table (IPv4)"
+  patterns:
+    - '^ip\\s+route\\s+show$'
+    - '^ip\\s+r$'
+
+- id: 212
+  objective: "Add a route to network 10.10.10.0/24 via gateway 192.168.1.254"
+  patterns:
+    - '^ip\\s+route\\s+add\\s+10\\.10\\.10\\.0/24\\s+via\\s+192\\.168\\.1\\.254$'
+
+# ───────── Interface down/up ──────────
+- id: 213
+  objective: "Bring interface eth1 down"
+  patterns:
+    - '^ip\\s+link\\s+set\\s+eth1\\s+down$'
+
+- id: 214
+  objective: "Bring interface eth1 back up"
+  patterns:
+    - '^ip\\s+link\\s+set\\s+eth1\\s+up$'
+
+# ───────── Basic connectivity test ──────────
+- id: 215
+  objective: "Ping the host 8.8.8.8 exactly 4 times"
+  patterns:
+    - '^ping\\s+-c\\s+4\\s+8\\.8\\.8\\.8$'

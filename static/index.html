@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>RHCSA Practice Shell</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- Red Hat fonts (Text for UI, Mono for terminal) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;700&family=Red+Hat+Mono:wght@400;700&display=swap" />
+
+  <!-- Xterm assets (5.3.0 – known‑good MIME & CORS) -->
+  <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css"/>
+  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #111;
+      font-family: 'Red Hat Text', 'Liberation Sans', system-ui, sans-serif;
+    }
+    header {
+      padding: 0.5rem 1rem;
+      background: #222;
+      color: #0f0;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    #terminal { flex: 1; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <header>RHCSA Practice — select option and press Enter</header>
+  <div id="terminal"></div>
+
+  <script>
+  /* Browser‑only front‑end: menu + quiz logic */
+  (async () => {
+    /* ---------- bootstrap ---------- */
+    const term = new Terminal({
+      convertEol: true,
+      fontFamily: 'Red Hat Mono, Liberation Mono, monospace', // RHEL‑style console font
+      fontSize: 14,
+      theme: { background: '#111111' }
+    });
+    term.open(document.getElementById('terminal'));
+
+    /* ---------- fetch metadata ---------- */
+    let meta = [];
+    try {
+      const res = await fetch('/questions');
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      meta = await res.json();
+    } catch (err) {
+      term.writeln(`\r\n\x1b[31mCannot reach /questions – ${err}\x1b[0m`);
+      return;
+    }
+
+    const byId   = Object.fromEntries(meta.map(q => [q.id, q]));
+    const topics = [...new Set(meta.map(q => q.topic))];
+    const sleep  = ms => new Promise(r => setTimeout(r, ms));
+    const C = { ok:'\x1b[32m', bad:'\x1b[31m', prompt:'\x1b[36m', reset:'\x1b[0m' };
+
+    async function grade(id, cmd) {
+      const res = await fetch('/answer', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ id, cmd })
+      });
+      return res.json();
+    }
+
+    function readLine() {
+      return new Promise(resolve => {
+        let buf = '';
+        const disp = term.onKey(e => {
+          const k = e.key, printable = !e.altKey && !e.ctrlKey && !e.metaKey;
+          if (k === '\r')      { term.writeln(''); disp.dispose(); resolve(buf); }
+          else if (k === '\u007f') { if (buf) { buf = buf.slice(0,-1); term.write('\b \b'); } }
+          else if (printable)   { buf += k; term.write(k); }
+        });
+      });
+    }
+
+    async function askLoop(queue) {
+      let correct = 0, total = queue.length;
+      for (const q of queue) {
+        term.writeln(`\r\n${C.prompt}Objective:${C.reset} ${q.objective}`);
+        term.write('\r\n$ ');
+        const cmd = await readLine();
+        const { correct: ok, feedback } = await grade(q.id, cmd.trim());
+        term.writeln(ok ? `${C.ok}${feedback}${C.reset}` : `${C.bad}${feedback}${C.reset}`);
+        if (ok) correct++; await sleep(120);
+      }
+      const pct = ((correct/total)*100).toFixed(1);
+      term.writeln(`\r\n${(pct>=70?C.ok:C.bad)}Score ${correct}/${total} (${pct} %)${C.reset}\r\n`);
+      await sleep(350); mainMenu();
+        }
+
+        function fullExam()       { askLoop([...meta].slice(0, 20).sort(()=>0.5-Math.random())); }
+        async function quickFire() { const ids = await (await fetch('/random')).json(); askLoop(ids.map(id=>byId[id])); }
+        async function topicDrill() {
+      term.writeln('\r\nChoose a topic:');
+      topics.forEach((t,i) => term.writeln(`${i+1}) ${t}`));
+      term.write('\r\nSelection: ');
+      const sel = await readLine(), idx = Number(sel)-1;
+      if (!topics[idx]) { term.writeln('Invalid topic.'); return mainMenu(); }
+      askLoop(meta.filter(q => q.topic === topics[idx]).sort(()=>0.5-Math.random()));
+    }
+
+    async function mainMenu() {
+      term.writeln(`\r\n${C.prompt}RHCSA Browser Practice${C.reset}
+1) Full RHCSA Practice Exam
+2) Topic Drill
+3) Quick-fire 10
+q) Quit`);
+      term.write('\r\nSelect option: ');
+      const choice = (await readLine()).trim();
+      if (choice === '1') return fullExam();
+      if (choice === '2') return topicDrill();
+      if (choice === '3') return quickFire();
+      if (choice.toLowerCase() === 'q') { term.writeln('\r\nGoodbye'); return; }
+      term.writeln('\r\nInvalid selection.'); mainMenu();
+    }
+
+    mainMenu();
+  })();
+  </script>
+</body>
+</html>

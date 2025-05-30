@@ -1,0 +1,114 @@
+# app/data/questions/basic.yaml
+# ---------------------------------------------------------------
+# RHCSA I – Basic command‑line drills
+# ---------------------------------------------------------------
+
+- id: 301
+  objective: "Display the current working directory"
+  patterns:
+    - '^pwd$'
+
+- id: 302
+  objective: "List all files, including hidden, in long format"
+  patterns:
+    - '^ls\s+-la$'
+    - '^ls\s+-al$'
+
+- id: 303
+  objective: "Create an empty file called notes.txt"
+  patterns:
+    - '^touch\s+notes\.txt$'
+
+- id: 304
+  objective: "Copy notes.txt to /tmp/notes.bak"
+  patterns:
+    - '^cp\s+notes\.txt\s+/tmp/notes\.bak$'
+
+- id: 305
+  objective: "Move notes.txt into /var/tmp"
+  patterns:
+    - '^mv\s+notes\.txt\s+/var/tmp/?$'
+
+- id: 306
+  objective: "Remove (delete) the file /tmp/notes.bak"
+  patterns:
+    - '^rm\s+/tmp/notes\.bak$'
+
+- id: 307
+  objective: "Create a directory called projects inside your $HOME"
+  patterns:
+    - '^mkdir\s+\$HOME/projects$'
+    - '^mkdir\s+~/projects$'
+
+- id: 308
+  objective: "Recursively remove the directory ~/oldstuff"
+  patterns:
+    - '^rm\s+-r\s+~/oldstuff$'
+    - '^rm\s+-rf\s+~/oldstuff$'
+
+- id: 309
+  objective: "Change permissions of script.sh to be executable for the owner only"
+  patterns:
+    - '^chmod\s+700\s+script\.sh$'
+    - '^chmod\s+u\+rwx,go-\w*\s+script\.sh$'
+
+- id: 310
+  objective: "Change ownership of /opt/data to user bob and group developers"
+  patterns:
+    - '^chown\s+bob:developers\s+/opt/data$'
+
+- id: 311
+  objective: "Display the first 10 lines of /etc/passwd"
+  patterns:
+    - '^head\s+-n\s+10\s+/etc/passwd$'
+    - '^head\s+/etc/passwd$'
+
+- id: 312
+  objective: "Append the line 'Hello World' to greetings.txt"
+  patterns:
+    - '^echo\s+"Hello\s+World"\s*>>\s+greetings\.txt$'
+
+- id: 313
+  objective: "Show only running processes owned by user root"
+  patterns:
+    - '^ps\s+-u\s+root$'
+    - '^ps\s+-U\s+root$'
+
+- id: 314
+  objective: "Display SELinux current mode (enforcing/permissive/disabled)"
+  patterns:
+    - '^getenforce$'
+    - '^sestatus$'
+
+- id: 315
+  objective: "Archive the directory projects/ into projects.tar.gz"
+  patterns:
+    - '^tar\s+-czf\s+projects\.tar\.gz\s+projects/?$'
+    - '^tar\s+-cf\s+-\s+projects\s*\|\s+gzip\s+-9\s*>\s+projects\.tar\.gz$'
+
+- id: 316
+  objective: "Extract projects.tar.gz into /srv/projects"
+  patterns:
+    - '^tar\s+-xzf\s+projects\.tar\.gz\s+-C\s+/srv/projects$'
+
+- id: 317
+  objective: "Find all files named *.log under /var that were modified in the last 24 hours"
+  patterns:
+    - '^find\s+/var\s+-name\s+".*\.log"\s+-mtime\s+-1$'
+
+- id: 318
+  objective: "Count the number of lines in /var/log/messages"
+  patterns:
+    - '^wc\s+-l\s+/var/log/messages$'
+
+- id: 319
+  objective: "Display only the IP addresses listening on TCP ports (no headers)"
+  patterns:
+    - '^ss\s+-ltnH$'
+    - '^ss\s+-lntH$'
+
+- id: 320
+  objective: "Kill the process with PID 1234 using the TERM signal"
+  patterns:
+    - '^kill\s+-TERM\s+1234$'
+    - '^kill\s+-15\s+1234$'
