@@ -1,2 +1,7 @@
-Dockerfile
 .github/
+.git
+__pycache__
+*.py[cod]
+*.pytest_cache
+.env
+tests/
