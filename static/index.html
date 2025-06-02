@@ -92,6 +92,18 @@
         const cmd = await readLine();
         const { correct: ok, feedback } = await grade(q.id, cmd.trim());
         term.writeln(ok ? `${C.ok}${feedback}${C.reset}` : `${C.bad}${feedback}${C.reset}`);
+        if (!ok) {
+          // Fetch and display the correct answer
+          try {
+            const solRes = await fetch(`/solution/${q.id}`);
+            if (solRes.ok) {
+              const solution = await solRes.json();
+              term.writeln(`${C.prompt}Correct answer:${C.reset} ${solution}`);
+            }
+          } catch (e) {
+            term.writeln(`${C.bad}Could not fetch solution.${C.reset}`);
+          }
+        }
         if (ok) correct++; await sleep(120);
       }
       const pct = ((correct/total)*100).toFixed(1);

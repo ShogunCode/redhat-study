@@ -136,3 +136,13 @@ def ten_random_ids() -> list[int]:
     import random
     universe = [q["id"] for q in router.state.questions]  # type: ignore[attr-defined]
     return random.sample(universe, k=min(10, len(universe)))
+
+@router.get("/solution/{question_id}", response_model=str)
+def get_solution(question_id: int) -> str:
+    """Return the first pattern as the solution for a given question ID."""
+    id_map = router.state.id_map  # type: ignore[attr-defined]
+    question = id_map.get(question_id)
+    if not question:
+        raise HTTPException(404, f"No question with id={question_id}")
+    
+    return question["patterns"][0]

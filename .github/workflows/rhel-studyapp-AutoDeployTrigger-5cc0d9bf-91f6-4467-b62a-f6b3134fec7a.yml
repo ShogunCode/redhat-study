@@ -35,14 +35,11 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          registryUrl: docker.io/conallmurphy/rhcsa-practice:0.1.0
+          registryUrl: docker.io
           registryUsername: ${{ secrets.RHELSTUDYAPP_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.RHELSTUDYAPP_REGISTRY_PASSWORD }}
           containerAppName: rhel-studyapp
           resourceGroup: NetworkWatcherRG
           imageToBuild: docker.io/conallmurphy/rhcsa-practice:0.1.0-rhel-studyapp-${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
 
 
