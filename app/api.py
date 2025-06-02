@@ -114,12 +114,19 @@ def get_question(
 @router.post("/answer", response_model=AnswerOut)
 def post_answer(payload: AnswerIn, request: Request) -> AnswerOut:
     """Run the regex grader and return verdict."""
-    id_map = router.state.id_map  # type: ignore[attr-defined]
+    id_map   = router.state.id_map                     # type: ignore[attr-defined]
     question = id_map.get(payload.id)
     if not question:
         raise HTTPException(404, f"No question with id={payload.id}")
 
     correct, feedback = grade(payload.cmd, question)
+
+    # ⬇️ If the answer was WRONG, show the learner a clean solution
+    if not correct:
+        # Prefer the explicit solution; else prettify the first pattern
+        solution = question.get("solution") or _humanise(question["patterns"][0])
+        feedback  = f"{feedback}\n\n💡 Correct answer: **{solution}**"
+
     return AnswerOut(correct=correct, feedback=feedback)
 
 @router.get("/questions", response_model=List[QuestionMeta])
