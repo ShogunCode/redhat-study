@@ -1,73 +1,65 @@
-# app/data/questions/storage.yaml
-# ---------------------------------------------------------------
-# RHCSA I – Storage management drills
-# ---------------------------------------------------------------
-
-# ───────── Partitions & filesystems ──────────
 - id: 101
-  objective: "Create a new ext4 filesystem on /dev/sdb1"
+  objective: Create a new ext4 filesystem on /dev/sdb1
   patterns:
-    - '^mkfs\.ext4\s+/dev/sdb1$'
-    - '^mkfs\s+-t\s+ext4\s+/dev/sdb1$'
-
+  - ^mkfs\.ext4\s+/dev/sdb1$
+  - ^mkfs\s+-t\s+ext4\s+/dev/sdb1$
+  solution: mkfs.ext4 /dev/sdb1
 - id: 102
-  objective: "Mount /dev/sdb1 at /mnt/data (temporary mount)"
+  objective: Mount /dev/sdb1 at /mnt/data (temporary mount)
   patterns:
-    - '^mount\s+/dev/sdb1\s+/mnt/data$'
-
-# ───────── LVM setup ──────────
+  - ^mount\s+/dev/sdb1\s+/mnt/data$
+  solution: mount /dev/sdb1 /mnt/data
 - id: 103
-  objective: "Initialise /dev/sdc1 as an LVM physical volume"
+  objective: Initialise /dev/sdc1 as an LVM physical volume
   patterns:
-    - '^pvcreate\s+/dev/sdc1$'
-
+  - ^pvcreate\s+/dev/sdc1$
+  solution: pvcreate /dev/sdc1
 - id: 104
-  objective: "Create a volume group named vgdata on /dev/sdc1"
+  objective: Create a volume group named vgdata on /dev/sdc1
   patterns:
-    - '^vgcreate\s+vgdata\s+/dev/sdc1$'
-
+  - ^vgcreate\s+vgdata\s+/dev/sdc1$
+  solution: vgcreate vgdata /dev/sdc1
 - id: 105
-  objective: "Create a 500 MB logical volume lvshare in vgdata"
+  objective: "Create a 500\_MB logical volume lvshare in vgdata"
   patterns:
-    - '^lvcreate\s+-L\s+500M\s+-n\s+lvshare\s+vgdata$'
-    - '^lvcreate\s+-n\s+lvshare\s+-L\s+500M\s+vgdata$'
-
+  - ^lvcreate\s+-L\s+500M\s+-n\s+lvshare\s+vgdata$
+  - ^lvcreate\s+-n\s+lvshare\s+-L\s+500M\s+vgdata$
+  solution: lvcreate -L 500M -n lvshare vgdata
 - id: 106
-  objective: "Format /dev/vgdata/lvshare with the XFS filesystem"
+  objective: Format /dev/vgdata/lvshare with the XFS filesystem
   patterns:
-    - '^mkfs\.xfs\s+/dev/vgdata/lvshare$'
-    - '^mkfs\s+-t\s+xfs\s+/dev/vgdata/lvshare$'
-
+  - ^mkfs\.xfs\s+/dev/vgdata/lvshare$
+  - ^mkfs\s+-t\s+xfs\s+/dev/vgdata/lvshare$
+  solution: mkfs.xfs /dev/vgdata/lvshare
 - id: 107
-  objective: "Mount the logical volume lvshare on /share"
+  objective: Mount the logical volume lvshare on /share
   patterns:
-    - '^mount\s+/dev/vgdata/lvshare\s+/share$'
-
-# ───────── LVM resizing & growfs ──────────
+  - ^mount\s+/dev/vgdata/lvshare\s+/share$
+  solution: mount /dev/vgdata/lvshare /share
 - id: 108
-  objective: "Extend lvshare by 200 MB"
+  objective: "Extend lvshare by 200\_MB"
   patterns:
-    - '^lvextend\s+-L\s+\+?200M\s+/dev/vgdata/lvshare$'
-    - '^lvextend\s+-r\s+-L\s+\+?200M\s+/dev/vgdata/lvshare$'
-
+  - ^lvextend\s+-L\s+\+?200M\s+/dev/vgdata/lvshare$
+  - ^lvextend\s+-r\s+-L\s+\+?200M\s+/dev/vgdata/lvshare$
+  solution: lvextend -L +?200M /dev/vgdata/lvshare
 - id: 109
-  objective: "Grow the XFS filesystem mounted on /share to the new size"
+  objective: Grow the XFS filesystem mounted on /share to the new size
   patterns:
-    - '^xfs_growfs\s+/share$'
-
-# ───────── Swap file management ──────────
+  - ^xfs_growfs\s+/share$
+  solution: xfs_growfs /share
 - id: 110
-  objective: "Create a 512 MB swap file at /swapfile using fallocate"
+  objective: "Create a 512\_MB swap file at /swapfile using fallocate"
   patterns:
-    - '^fallocate\s+-l\s+512M\s+/swapfile$'
-    - '^dd\s+if=/dev/zero\s+of=/swapfile\s+bs=1M\s+count=512$'
-
+  - ^fallocate\s+-l\s+512M\s+/swapfile$
+  - ^dd\s+if=/dev/zero\s+of=/swapfile\s+bs=1M\s+count=512$
+  solution: fallocate -l 512M /swapfile
 - id: 111
-  objective: "Initialise the swap area on /swapfile"
+  objective: Initialise the swap area on /swapfile
   patterns:
-    - '^mkswap\s+/swapfile$'
-
+  - ^mkswap\s+/swapfile$
+  solution: mkswap /swapfile
 - id: 112
-  objective: "Enable the swap file immediately"
+  objective: Enable the swap file immediately
   patterns:
-    - '^swapon\s+/swapfile$'
+  - ^swapon\s+/swapfile$
+  solution: swapon /swapfile

@@ -137,12 +137,23 @@ def ten_random_ids() -> list[int]:
     universe = [q["id"] for q in router.state.questions]  # type: ignore[attr-defined]
     return random.sample(universe, k=min(10, len(universe)))
 
+def _humanise(pattern: str) -> str:
+    """
+    Best-effort conversion of a grading regex into a plain-text command.
+    Handles the most common tokens we use: ^…$, \s+, \s*, \s?, and escaped dots.
+    """
+    cmd = pattern.lstrip("^").rstrip("$")         # drop anchors
+    cmd = re.sub(r"\\s[+*?]", " ", cmd)           # \s+, \s*, \s?  → single space
+    cmd = re.sub(r"\\([./-])", r"\1", cmd)        # de-escape ./-
+    cmd = cmd.replace("\\", "")                  # drop any stray \
+    return " ".join(cmd.split())                  # collapse doubles
+
 @router.get("/solution/{question_id}", response_model=str)
 def get_solution(question_id: int) -> str:
-    """Return the first pattern as the solution for a given question ID."""
-    id_map = router.state.id_map  # type: ignore[attr-defined]
-    question = id_map.get(question_id)
-    if not question:
-        raise HTTPException(404, f"No question with id={question_id}")
-    
-    return question["patterns"][0]
+    id_map = router.state.id_map                 # type: ignore[attr-defined]
+    q      = id_map.get(question_id)
+    if not q:
+        raise HTTPException(404, f"question {question_id} not found")
+
+    # Prefer explicit solution → fall back to a prettified regex
+    return q.get("solution") or _humanise(q["patterns"][0])

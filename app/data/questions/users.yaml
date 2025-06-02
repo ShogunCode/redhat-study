@@ -1,94 +1,89 @@
-# app/data/questions/users.yaml
-# -------------------------------------------------------------------
-# RHCSA I – User & Group management drills
-# -------------------------------------------------------------------
-
 - id: 1
-  objective: "Create a user bob with the default bash shell"
+  objective: Create a user bob with the default bash shell
   patterns:
-    - "^useradd\\s+bob$"
-    - "^adduser\\s+bob$"
-
+  - ^useradd\s+bob$
+  - ^adduser\s+bob$
+  solution: useradd bob
 - id: 2
-  objective: "Create a user alice with /bin/zsh as her login shell"
+  objective: Create a user alice with /bin/zsh as her login shell
   patterns:
-    - "^useradd\\s+-s\\s+/bin/zsh\\s+alice$"
-    - "^adduser\\s+--shell\\s+/bin/zsh\\s+alice$"
-
+  - ^useradd\s+-s\s+/bin/zsh\s+alice$
+  - ^adduser\s+--shell\s+/bin/zsh\s+alice$
+  solution: useradd -s /bin/zsh alice
 - id: 3
-  objective: "Create the primary group developers"
+  objective: Create the primary group developers
   patterns:
-    - "^groupadd\\s+developers$"
-
+  - ^groupadd\s+developers$
+  solution: groupadd developers
 - id: 4
-  objective: "Create user alice with UID 2001 and primary group developers"
+  objective: Create user alice with UID 2001 and primary group developers
   patterns:
-    # order: -u then -g
-    - "^useradd\\s+-u\\s+2001\\s+-g\\s+developers\\s+alice$"
-    # order: -g then -u
-    - "^useradd\\s+-g\\s+developers\\s+-u\\s+2001\\s+alice$"
-
+  - ^useradd\s+-u\s+2001\s+-g\s+developers\s+alice$
+  - ^useradd\s+-g\s+developers\s+-u\s+2001\s+alice$
+  solution: useradd -u 2001 -g developers alice
 - id: 5
-  objective: "Add alice to the supplementary group wheel (keep her primary group)"
+  objective: Add alice to the supplementary group wheel (keep her primary group)
   patterns:
-    - "^usermod\\s+-aG\\s+wheel\\s+alice$"
-
+  - ^usermod\s+-aG\s+wheel\s+alice$
+  solution: usermod -aG wheel alice
 - id: 6
-  objective: "Lock the user devops so they cannot log in"
+  objective: Lock the user devops so they cannot log in
   patterns:
-    - "^usermod\\s+-L\\s+devops$"
-    - "^passwd\\s+-l\\s+devops$"
-
+  - ^usermod\s+-L\s+devops$
+  - ^passwd\s+-l\s+devops$
+  solution: usermod -L devops
 - id: 7
-  objective: "Unlock the user devops"
+  objective: Unlock the user devops
   patterns:
-    - "^usermod\\s+-U\\s+devops$"
-    - "^passwd\\s+-u\\s+devops$"
-
+  - ^usermod\s+-U\s+devops$
+  - ^passwd\s+-u\s+devops$
+  solution: usermod -U devops
 - id: 8
-  objective: "Create a system account backup with no‑login shell"
+  objective: "Create a system account backup with no\u2011login shell"
   patterns:
-    - "^useradd\\s+-r\\s+-s\\s+/sbin/nologin\\s+backup$"
-    - "^adduser\\s+--system\\s+--shell\\s+/sbin/nologin\\s+backup$"
-
+  - ^useradd\s+-r\s+-s\s+/sbin/nologin\s+backup$
+  - ^adduser\s+--system\s+--shell\s+/sbin/nologin\s+backup$
+  solution: useradd -r -s /sbin/nologin backup
 - id: 9
-  objective: "Delete the user tempuser and remove their home directory"
+  objective: Delete the user tempuser and remove their home directory
   patterns:
-    - "^userdel\\s+-r\\s+tempuser$"
-    - "^deluser\\s+--remove-home\\s+tempuser$"
-
+  - ^userdel\s+-r\s+tempuser$
+  - ^deluser\s+--remove-home\s+tempuser$
+  solution: userdel -r tempuser
 - id: 10
-  objective: "Expire bob’s password immediately so he must change it on next login"
+  objective: "Expire bob\u2019s password immediately so he must change it on next\
+    \ login"
   patterns:
-    - "^passwd\\s+-e\\s+bob$"
-    - "^chage\\s+-d\\s+0\\s+bob$"
-
+  - ^passwd\s+-e\s+bob$
+  - ^chage\s+-d\s+0\s+bob$
+  solution: passwd -e bob
 - id: 11
-  objective: "Force frank to change his password on the next login"
+  objective: Force frank to change his password on the next login
   patterns:
-    - "^chage\\s+-d\\s+0\\s+frank$"
-    - "^passwd\\s+-e\\s+frank$"
-
+  - ^chage\s+-d\s+0\s+frank$
+  - ^passwd\s+-e\s+frank$
+  solution: chage -d 0 frank
 - id: 12
-  objective: "Set user charlie’s account to expire on 2025‑12‑31"
+  objective: "Set user charlie\u2019s account to expire on 2025\u201112\u201131"
   patterns:
-    - "^chage\\s+-E\\s+2025-12-31\\s+charlie$"
-    - "^usermod\\s+-e\\s+2025-12-31\\s+charlie$"
-
+  - ^chage\s+-E\s+2025-12-31\s+charlie$
+  - ^usermod\s+-e\s+2025-12-31\s+charlie$
+  solution: chage -E 2025-12-31 charlie
 - id: 13
-  objective: "Change user dave’s default shell to /usr/bin/fish"
+  objective: "Change user dave\u2019s default shell to /usr/bin/fish"
   patterns:
-    - "^usermod\\s+-s\\s+/usr/bin/fish\\s+dave$"
-    - "^chsh\\s+-s\\s+/usr/bin/fish\\s+dave$"
-
+  - ^usermod\s+-s\s+/usr/bin/fish\s+dave$
+  - ^chsh\s+-s\s+/usr/bin/fish\s+dave$
+  solution: usermod -s /usr/bin/fish dave
 - id: 14
-  objective: "Update eric’s GECOS/comment field to 'Eric Cartman'"
+  objective: "Update eric\u2019s GECOS/comment field to 'Eric Cartman'"
   patterns:
-    - "^usermod\\s+-c\\s+\"Eric\\s+Cartman\"\\s+eric$"
-    - "^chfn\\s+-f\\s+\"Eric\\s+Cartman\"\\s+eric$"
-
+  - ^usermod\s+-c\s+"Eric\s+Cartman"\s+eric$
+  - ^chfn\s+-f\s+"Eric\s+Cartman"\s+eric$
+  solution: usermod -c "Eric Cartman" eric
 - id: 15
-  objective: "Create a new user devops with a preset primary group devops"
+  objective: Create a new user devops with a preset primary group devops
   patterns:
-    - "^groupadd\\s+devops$"           # create group first (optional in many setups)
-    - "^useradd\\s+-g\\s+devops\\s+devops$"
+  - ^groupadd\s+devops$
+  - ^useradd\s+-g\s+devops\s+devops$
+  solution: groupadd devops
