@@ -125,7 +125,7 @@ def post_answer(payload: AnswerIn, request: Request) -> AnswerOut:
     if not correct:
         # Prefer the explicit solution; else prettify the first pattern
         solution = question.get("solution") or _humanise(question["patterns"][0])
-        feedback  = f"{feedback}\n\n💡 Correct answer: **{solution}**"
+        feedback  = f"{feedback}\n\n{solution}"
 
     return AnswerOut(correct=correct, feedback=feedback)
 
@@ -164,3 +164,10 @@ def get_solution(question_id: int) -> str:
 
     # Prefer explicit solution → fall back to a prettified regex
     return q.get("solution") or _humanise(q["patterns"][0])
+
+
+# --------------------------------------------------------------------------- #
+# Ensure question cache is populated even if startup events do not run
+# --------------------------------------------------------------------------- #
+
+_warm_cache()

@@ -13,4 +13,6 @@ def test_post_answer_validation(client):
     q = client.get("/question").json()
     # Intentionally wrong answer:
     r = client.post("/answer", json={"id": q["id"], "cmd": "foo"}).json()
-    assert r == {"correct": False, "feedback": "❌ Not quite—try again."}
+    solution = client.get(f"/solution/{q['id']}").json()
+    assert r == {"correct": False,
+                 "feedback": f"❌ Not quite—try again.\n\n{solution}"}
