@@ -1,0 +1,120 @@
+- id: 401
+  question: "The command to display the current directory is ___"
+  answer: "pwd"
+  incorrect:
+    - ls
+    - cd
+    - whoami
+    - date
+- id: 402
+  question: "To list all files including hidden ones, run ___ -la"
+  answer: "ls"
+  incorrect:
+    - cat
+    - pwd
+    - rm
+    - du
+- id: 403
+  question: "Change directory to /tmp using ___ /tmp"
+  answer: "cd"
+  incorrect:
+    - pwd
+    - ls
+    - touch
+    - mkdir
+- id: 404
+  question: "Create an empty file named test.txt with ___ test.txt"
+  answer: "touch"
+  incorrect:
+    - cat
+    - echo
+    - cp
+    - mkdir
+- id: 405
+  question: "Display the contents of file.txt on the terminal with ___ file.txt"
+  answer: "cat"
+  incorrect:
+    - less
+    - echo
+    - rm
+    - mv
+- id: 406
+  question: "Remove the file old.log using ___ old.log"
+  answer: "rm"
+  incorrect:
+    - mv
+    - cat
+    - less
+    - cp
+- id: 407
+  question: "Create directory docs with ___ docs"
+  answer: "mkdir"
+  incorrect:
+    - rmdir
+    - touch
+    - cd
+    - ls
+- id: 408
+  question: "Move file.txt to /tmp/ with ___ file.txt /tmp/"
+  answer: "mv"
+  incorrect:
+    - cp
+    - rm
+    - touch
+    - cat
+- id: 409
+  question: "Copy file.txt to file.bak using ___ file.txt file.bak"
+  answer: "cp"
+  incorrect:
+    - mv
+    - rm
+    - cat
+    - ln
+- id: 410
+  question: "Search for the string 'root' in passwd with ___ root /etc/passwd"
+  answer: "grep"
+  incorrect:
+    - cat
+    - find
+    - cut
+    - awk
+- id: 411
+  question: "Show running processes with ___"
+  answer: "ps"
+  incorrect:
+    - top
+    - who
+    - id
+    - kill
+- id: 412
+  question: "Display disk usage in human readable form with ___ -h"
+  answer: "du"
+  incorrect:
+    - df
+    - ls
+    - free
+    - ps
+- id: 413
+  question: "Show your current username with ___"
+  answer: "whoami"
+  incorrect:
+    - id
+    - pwd
+    - echo
+    - groups
+- id: 414
+  question: "Print the current date and time with ___"
+  answer: "date"
+  incorrect:
+    - cal
+    - time
+    - clock
+    - uptime
+- id: 415
+  question: "Shut down the system immediately with ___ now"
+  answer: "shutdown"
+  incorrect:
+    - reboot
+    - halt
+    - poweroff
+    - init

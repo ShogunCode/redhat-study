@@ -15,7 +15,13 @@ from fastapi import APIRouter, HTTPException, Query
 from starlette.requests import Request
 
 from .grading import grade
-from .models import AnswerIn, AnswerOut, QuestionOut, QuestionMeta
+from .models import (
+    AnswerIn,
+    AnswerOut,
+    QuestionOut,
+    QuestionMeta,
+    FillBlankQuestion,
+)
 
 router = APIRouter()
 
@@ -59,6 +65,21 @@ def _load_questions() -> List[Dict]:
     return questions
 
 
+def _load_fill_blank_questions() -> List[Dict]:
+    """Load fill-in-the-blank quiz questions from YAML."""
+    fib_file = Path(__file__).parent / "data" / "fill_blank.yaml"
+    if not fib_file.is_file():
+        raise RuntimeError(f"Fill-in blank file not found: {fib_file}")
+
+    with fib_file.open("r", encoding="utf-8") as fp:
+        data = yaml.safe_load(fp) or []
+
+    if not data:
+        raise RuntimeError("Fill-in blank question bank is empty!")
+
+    return data
+
+
 
 # --------------------------------------------------------------------------- #
 # Startup hook                                                                #
@@ -72,6 +93,7 @@ def _warm_cache() -> None:
         router.state = SimpleNamespace()  # type: ignore
 
     router.state.questions = _load_questions()  # type: ignore
+    router.state.fill_blank = _load_fill_blank_questions()  # type: ignore
     # Deterministic order; we can shuffle later if desired.
     router.state.id_map = {q["id"]: q for q in router.state.questions}  # type: ignore
 
@@ -125,7 +147,7 @@ def post_answer(payload: AnswerIn, request: Request) -> AnswerOut:
     if not correct:
         # Prefer the explicit solution; else prettify the first pattern
         solution = question.get("solution") or _humanise(question["patterns"][0])
-        feedback  = f" {feedback}\n\n"
+        feedback  = f"{feedback}\n\n{solution}"
 
     return AnswerOut(correct=correct, feedback=feedback)
 
@@ -143,6 +165,29 @@ def ten_random_ids() -> list[int]:
     import random
     universe = [q["id"] for q in router.state.questions]  # type: ignore[attr-defined]
     return random.sample(universe, k=min(10, len(universe)))
+
+
+@router.get("/fill_blank", response_model=List[FillBlankQuestion])
+def fill_blank_questions() -> list[FillBlankQuestion]:
+    """Return fill-in-the-blank quiz questions with randomised choices."""
+    import random
+
+    fib_data: list = router.state.fill_blank  # type: ignore[attr-defined]
+    out: list[FillBlankQuestion] = []
+
+    for q in fib_data:
+        choices = [q["answer"]] + random.sample(q["incorrect"], k=3)
+        random.shuffle(choices)
+        out.append(
+            FillBlankQuestion(
+                id=q["id"],
+                question=q["question"],
+                choices=choices,
+                answer=q["answer"],
+            )
+        )
+
+    return out
 
 def _humanise(pattern: str) -> str:
     """
