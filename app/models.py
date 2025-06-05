@@ -21,3 +21,12 @@ class AnswerOut(BaseModel):
     """Grader verdict."""
     correct: bool
     feedback: str
+
+
+class FillBlankQuestion(BaseModel):
+    """Question for the fill-in-the-blank quiz."""
+
+    id: int
+    question: str
+    choices: list[str]
+    answer: str

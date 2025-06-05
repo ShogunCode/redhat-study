@@ -125,6 +125,35 @@
 
         function fullExam()       { askLoop([...meta].slice(0, 20).sort(()=>0.5-Math.random())); }
         async function quickFire() { const ids = await (await fetch('/random')).json(); askLoop(ids.map(id=>byId[id])); }
+        async function fillBlankQuiz() {
+      try {
+        const res = await fetch('/fill_blank');
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        var quiz = await res.json();
+      } catch (err) {
+        term.writeln(`\r\n${C.bad}Cannot load quiz – ${err}${C.reset}`);
+        return mainMenu();
+      }
+      let correct = 0, total = quiz.length;
+      for (const q of quiz) {
+        term.writeln(`\r\n${C.prompt}${q.question}${C.reset}`);
+        q.choices.forEach((c,i)=>term.writeln(`${i+1}) ${c}`));
+        term.write('\r\nSelection: ');
+        const sel = await readLine();
+        const idx = Number(sel)-1;
+        if (q.choices[idx] === q.answer) {
+          term.writeln(`${C.ok}Correct!${C.reset}`);
+          correct++; answeredCorrect++; updateStatus();
+        } else {
+          term.writeln(`${C.bad}Wrong. Answer: ${q.answer}${C.reset}`);
+        }
+        await sleep(120);
+      }
+      const pct = ((correct/total)*100).toFixed(1);
+      term.writeln(`\r\n${(pct>=70?C.ok:C.bad)}Score ${correct}/${total} (${pct} %)${C.reset}\r\n`);
+      answeredCorrect = 0; updateStatus();
+      await sleep(350); mainMenu();
+    }
         async function topicDrill() {
       term.writeln('\r\nChoose a topic:');
       topics.forEach((t,i) => term.writeln(`${i+1}) ${t}`));
@@ -139,12 +168,14 @@
 1) Full RHCSA Practice Exam
 2) Topic Drill
 3) Quick-fire 10
+4) Fill in the Blank Quiz
 q) Quit`);
       term.write('\r\nSelect option: ');
       const choice = (await readLine()).trim();
       if (choice === '1') return fullExam();
       if (choice === '2') return topicDrill();
       if (choice === '3') return quickFire();
+      if (choice === '4') return fillBlankQuiz();
       if (choice.toLowerCase() === 'q') { term.writeln('\r\nGoodbye'); return; }
       term.writeln('\r\nInvalid selection.'); mainMenu();
     }
