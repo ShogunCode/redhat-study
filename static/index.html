@@ -33,7 +33,7 @@
   </style>
 </head>
 <body>
-  <header>RHCSA Practice — select option and press Enter</header>
+  <header id="status">RHCSA Practice — Correct answers: 0</header>
   <div id="terminal"></div>
 
   <script>
@@ -47,6 +47,13 @@
       theme: { background: '#111111' }
     });
     term.open(document.getElementById('terminal'));
+
+    const statusEl = document.getElementById('status');
+    let answeredCorrect = 0;
+    const updateStatus = () => {
+      statusEl.textContent = `RHCSA Practice — Correct answers: ${answeredCorrect}`;
+    };
+    updateStatus();
 
     /* ---------- fetch metadata ---------- */
     let meta = [];
@@ -85,6 +92,8 @@
     }
 
     async function askLoop(queue) {
+      answeredCorrect = 0;
+      updateStatus();
       let correct = 0, total = queue.length;
       for (const q of queue) {
         term.writeln(`\r\n${C.prompt}Objective:${C.reset} ${q.objective}`);
@@ -104,10 +113,13 @@
             term.writeln(`${C.bad}Could not fetch solution.${C.reset}`);
           }
         }
-        if (ok) correct++; await sleep(120);
+        if (ok) { correct++; answeredCorrect++; updateStatus(); }
+        await sleep(120);
       }
       const pct = ((correct/total)*100).toFixed(1);
       term.writeln(`\r\n${(pct>=70?C.ok:C.bad)}Score ${correct}/${total} (${pct} %)${C.reset}\r\n`);
+      answeredCorrect = 0;
+      updateStatus();
       await sleep(350); mainMenu();
         }
 
