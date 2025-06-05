@@ -147,7 +147,7 @@ def post_answer(payload: AnswerIn, request: Request) -> AnswerOut:
     if not correct:
         # Prefer the explicit solution; else prettify the first pattern
         solution = question.get("solution") or _humanise(question["patterns"][0])
-        feedback  = f"{feedback}\n\n{solution}"
+        feedback  = f"{feedback}\n\n"
 
     return AnswerOut(correct=correct, feedback=feedback)
 
