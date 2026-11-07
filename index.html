@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="study-storage" content="browser">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#151515">
+  <title>OpenShift Study</title>
+  <link rel="stylesheet" href="./learning.css">
+  <script type="module" src="./learning.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="#home">OpenShift <span>Study</span></a>
+    <nav aria-label="Main navigation">
+      <a href="#home" data-nav="home">Overview</a>
+      <a href="#pathway" data-nav="pathway">Topics</a>
+      <a href="#progress" data-nav="progress">Progress & review</a>
+      <a href="#labs" data-nav="labs">Lab notebook</a>
+    </nav>
+    <a class="legacy" href="./practice.html">RHCSA / legacy practice ↗</a>
+  </aside>
+  <div class="shell">
+    <header class="topbar"><div id="breadcrumb">Overview</div><span class="version">OpenShift 4.18 · Local practice</span></header>
+    <main id="main" tabindex="-1"><div class="loading" role="status">Loading…</div></main>
+  </div>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <dialog id="replace-dialog"><h2>Unfinished session</h2><p>Resume it or start a replacement. Recorded answers stay in your history.</p><div class="actions"><button id="resume-existing" class="primary">Resume session</button><button id="replace-existing" class="secondary">Replace session</button><button id="cancel-replace" class="text-button">Cancel</button></div></dialog>
+  <dialog id="reset-dialog"><h2>Reset local progress</h2><p>This removes this browser’s learner history, active session, and lab notebook. Export your progress first if you want a copy.</p><label for="reset-confirmation">Type RESET LOCAL PROGRESS</label><input id="reset-confirmation" autocomplete="off"><p id="reset-error" role="alert"></p><div class="actions"><button id="confirm-reset" class="danger">Reset progress</button><button id="cancel-reset" class="secondary">Cancel</button></div></dialog>
+</body>
+</html>

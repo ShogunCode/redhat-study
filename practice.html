@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="study-storage" content="browser">
+  <meta charset="utf-8"/>
+  <title>Red Hat Study — RHCSA &amp; OpenShift</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;700&family=Red+Hat+Mono:wght@400;700&display=swap"/>
+  <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css"/>
+  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: #111; color: #eee; font-family: 'Red Hat Text', system-ui, sans-serif; }
+    header { padding: .5rem 1rem; background: #222; color: #8ce0b0; font-weight: bold; }
+    #terminal { flex: 1; overflow: hidden; }
+    [hidden] { display: none !important; }
+    #selection { flex: 1; overflow: auto; padding: 1.5rem; }
+    .wrap { max-width: 900px; margin: auto; }
+    button { font: inherit; color: #eee; background: #252525; border: 1px solid #777; border-radius: 4px; padding: .7rem 1rem; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #65d9ef; outline-offset: 3px; }
+    #selection-scenario, #selection-question { white-space: pre-wrap; overflow-wrap: anywhere; }
+    #selection-meta { color: #8ce0b0; }
+    fieldset { border: 0; padding: 0; margin: 1.5rem 0; }
+    legend { margin-bottom: .75rem; }
+    .choice { display: flex; align-items: flex-start; gap: .8rem; padding: 1rem; margin: .6rem 0; border: 1px solid #555; border-radius: 5px; cursor: pointer; }
+    .choice input { margin: .25rem 0 0; width: 1.2rem; height: 1.2rem; flex-shrink: 0; accent-color: #8ce0b0; }
+    .choice span { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .actions { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+    #selection-result { border-top: 1px solid #555; padding-top: 1rem; }
+    #selection-reviews { padding: 0; list-style: none; }
+    #selection-reviews li { margin: .8rem 0; padding: 1rem; border-left: 3px solid #888; background: #1c1c1c; }
+    #selection-reviews .right { border-color: #8ce0b0; }
+    #selection-reviews .wrong { border-color: #ff9b9b; }
+    #selection-message { color: #ff9b9b; }
+  </style>
+</head>
+<body>
+  <a href="./" style="padding:.65rem 1rem;background:#24382e;color:#d8ecd6;font-size:.85rem">← OpenShift learning workbench</a>
+  <header id="status">Red Hat Practice — Correct answers: 0</header>
+  <div id="terminal"></div>
+  <section id="selection" hidden aria-label="OpenShift multiple selection">
+    <div class="wrap">
+      <button id="selection-back" type="button">Back to main menu</button>
+      <p id="selection-meta"></p>
+      <h1 id="selection-title" tabindex="-1">OpenShift Practice</h1>
+      <p id="selection-progress"></p>
+      <p id="selection-scenario"></p>
+      <h2 id="selection-question" tabindex="-1"></h2>
+      <form id="selection-form">
+        <fieldset id="selection-choices"><legend>Select all that apply. The complete set must be correct.</legend></fieldset>
+        <p id="selection-message" role="status"></p>
+        <button id="selection-submit" type="submit">Check selections</button>
+      </form>
+      <div id="selection-result" hidden>
+        <h2 id="selection-verdict" tabindex="-1"></h2>
+        <ul id="selection-reviews"></ul>
+        <button id="selection-next" type="button">Next question</button>
+      </div>
+    </div>
+  </section>
+  <script>
+  (async () => {
+    const term = new Terminal({convertEol: true, fontFamily: 'Red Hat Mono, monospace', fontSize: 14, theme: {background: '#111111'}});
+    term.open(document.getElementById('terminal'));
+    const status = document.getElementById('status');
+    const terminal = document.getElementById('terminal');
+    const panel = document.getElementById('selection');
+    const el = id => document.getElementById('selection-' + id);
+    let answeredCorrect = 0;
+    const updateStatus = () => { status.textContent = 'Red Hat Practice — Correct answers: ' + answeredCorrect; };
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const C = {ok:'\x1b[32m', bad:'\x1b[31m', prompt:'\x1b[36m', reset:'\x1b[0m'};
+    async function json(url, options) {
+      if (document.querySelector('meta[name="study-storage"]')) return (await import("./legacy.js")).legacy(url, options);
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+      return res.json();
+    }
+    let meta;
+    try { meta = await json('/questions'); }
+    catch (err) { term.writeln('Cannot load questions — ' + err); return; }
+    const byId = Object.fromEntries(meta.map(q => [q.id, q]));
+    const topics = [...new Set(meta.map(q => q.topic))];
+    function shuffle(items) {
+      const out = [...items];
+      for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+      return out;
+    }
+    function readLine() {
+      return new Promise(resolve => {
+        let buf = '';
+        const handler = term.onKey(e => {
+          const key = e.key;
+          if (key === '\r') { term.writeln(''); handler.dispose(); resolve(buf); }
+          else if (key === '\u007f') { if (buf) { buf = buf.slice(0, -1); term.write('\b \b'); } }
+          else if (!e.altKey && !e.ctrlKey && !e.metaKey) { buf += key; term.write(key); }
+        });
+      });
+    }
+    function askSelection(q, position, total, label) {
+      terminal.hidden = true; panel.hidden = false; panel.scrollTop = 0;
+      el('meta').textContent = q.topic + ' · ' + q.difficulty;
+      el('progress').textContent = label + ' · Question ' + position + ' of ' + total;
+      el('scenario').textContent = q.scenario;
+      el('question').textContent = q.objective;
+      el('message').textContent = '';
+      el('result').hidden = true; el('submit').hidden = false; el('submit').disabled = false;
+      el('reviews').replaceChildren();
+      const fieldset = el('choices');
+      fieldset.replaceChildren();
+      const legend = document.createElement('legend');
+      legend.textContent = 'Select all that apply. The complete set must be correct.';
+      fieldset.append(legend);
+      for (const choice of q.choices) {
+        const label = document.createElement('label'); label.className = 'choice';
+        const input = document.createElement('input'); input.type = 'checkbox'; input.value = choice.id;
+        const text = document.createElement('span'); text.textContent = choice.text;
+        label.append(input, text); fieldset.append(label);
+      }
+      el('title').focus();
+      return new Promise(resolve => {
+        let busy = false, verdict = null;
+        const finish = result => {
+          el('form').removeEventListener('submit', submit);
+          el('back').removeEventListener('click', back);
+          el('next').removeEventListener('click', next);
+          panel.hidden = true; terminal.hidden = false; term.focus(); resolve(result);
+        };
+        const back = () => { if (!busy) finish(null); };
+        const next = () => finish(verdict);
+        const submit = async event => {
+          event.preventDefault();
+          if (busy || verdict) return;
+          const selected = [...fieldset.querySelectorAll('input:checked')].map(input => input.value);
+          if (!selected.length) { el('message').textContent = 'Select your answers before checking.'; return; }
+          busy = true; el('submit').disabled = true; el('back').disabled = true; el('message').textContent = '';
+          try {
+            verdict = await json('/selection-answer', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:q.id, selected})});
+            if (verdict.correct) { answeredCorrect++; updateStatus(); }
+            el('verdict').textContent = verdict.feedback;
+            const reviews = new Map(verdict.choices.map(choice => [choice.id, choice]));
+            for (const choice of q.choices) {
+              const review = reviews.get(choice.id);
+              const li = document.createElement('li');
+              li.className = review.correct === review.selected ? 'right' : 'wrong';
+              const title = document.createElement('strong');
+              const state = review.correct ? (review.selected ? 'Correctly selected' : 'Missed correct choice') : (review.selected ? 'Incorrectly selected' : 'Correctly left unselected');
+              title.textContent = state + ': ' + choice.text;
+              const explanation = document.createElement('p'); explanation.textContent = review.explanation;
+              li.append(title, explanation); el('reviews').append(li);
+            }
+            for (const input of fieldset.querySelectorAll('input')) input.disabled = true;
+            el('submit').hidden = true; el('result').hidden = false;
+            el('next').textContent = position === total ? 'View score' : 'Next question';
+            el('verdict').focus();
+          } catch (err) { el('message').textContent = 'Could not check answers — ' + err + '. Try again.'; }
+          finally { busy = false; el('submit').disabled = false; el('back').disabled = false; }
+        };
+        el('form').addEventListener('submit', submit);
+        el('back').addEventListener('click', back);
+        el('next').addEventListener('click', next);
+      });
+    }
+    async function askLoop(queue, label = 'Practice') {
+      answeredCorrect = 0; updateStatus();
+      if (!queue.length) { term.writeln('No questions match this selection.'); return mainMenu(); }
+      for (let i = 0; i < queue.length; i++) {
+        const q = queue[i];
+        if (q.platform === 'openshift') {
+          const verdict = await askSelection(q, i + 1, queue.length, label);
+          if (verdict === null) return mainMenu();
+          continue;
+        }
+        term.writeln('\r\n' + C.prompt + label + ' · ' + q.topic + C.reset);
+        term.writeln('\r\nObjective: ' + q.objective); term.write('\r\n$ ');
+        const cmd = (await readLine()).trim();
+        if (cmd.toLowerCase() === 'menu') return mainMenu();
+        try {
+          const result = await json('/answer', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:q.id, cmd})});
+          term.writeln((result.correct ? C.ok : C.bad) + result.feedback + C.reset);
+          if (result.correct) { answeredCorrect++; updateStatus(); }
+          else { term.writeln('Correct answer: ' + await json('/solution/' + encodeURIComponent(q.id))); }
+        } catch (err) { term.writeln('Could not check answer — ' + err); return mainMenu(); }
+        await sleep(120);
+      }
+      return finishScore(queue.length);
+    }
+    async function finishScore(total) {
+      const pct = (answeredCorrect / total * 100).toFixed(1);
+      term.writeln('\r\n' + (pct >= 70 ? C.ok : C.bad) + 'Score ' + answeredCorrect + '/' + total + ' (' + pct + ' %)' + C.reset);
+      answeredCorrect = 0; updateStatus(); await sleep(350); return mainMenu();
+    }
+    function fullExam() { return askLoop(meta.filter(q => q.platform === 'rhcsa').slice(0, 20).sort(() => .5 - Math.random()), 'RHCSA exam'); }
+    async function chooseBank() {
+      while (true) {
+        term.writeln('\r\nChoose a question bank:\r\n1) RHCSA + OpenShift\r\n2) OpenShift\r\n3) RHCSA\r\nmenu) Main menu');
+        term.write('\r\nSelection (Enter for both): ');
+        const choice = (await readLine()).trim().toLowerCase();
+        if (choice === 'menu') return null;
+        const bank = {'':'all', '1':'all', '2':'openshift', '3':'rhcsa'}[choice];
+        if (bank) return bank;
+        term.writeln('Invalid bank.');
+      }
+    }
+    async function chooseDifficulty() {
+      while (true) {
+        term.writeln('\r\nOpenShift difficulty:\r\n1) Mixed easy, medium & hard\r\n2) Easy\r\n3) Medium\r\n4) Hard\r\nmenu) Main menu');
+        term.write('\r\nSelection (Enter for mixed): ');
+        const choice = (await readLine()).trim().toLowerCase();
+        if (choice === 'menu') return null;
+        const level = {'':'all', '1':'all', '2':'easy', '3':'medium', '4':'hard'}[choice];
+        if (level) return level;
+        term.writeln('Invalid difficulty.');
+      }
+    }
+    async function quickFire() {
+      const bank = await chooseBank(); if (!bank) return mainMenu();
+      const level = bank === 'rhcsa' ? 'all' : await chooseDifficulty(); if (!level) return mainMenu();
+      try {
+        const ids = await json('/random?platform=' + bank + '&difficulty=' + level);
+        return askLoop(ids.map(id => byId[id]), 'Quick-fire');
+      } catch (err) { term.writeln('Cannot load questions — ' + err); return mainMenu(); }
+    }
+    async function fillBlankQuiz() {
+      const bank = await chooseBank(); if (!bank) return mainMenu();
+      const level = bank === 'rhcsa' ? 'all' : await chooseDifficulty(); if (!level) return mainMenu();
+      let quiz;
+      try { quiz = await json('/fill_blank?platform=' + bank + '&difficulty=' + level); }
+      catch (err) { term.writeln('Cannot load quiz — ' + err); return mainMenu(); }
+      if (!quiz.length) { term.writeln('No questions match this selection.'); return mainMenu(); }
+      answeredCorrect = 0; updateStatus();
+      for (let i = 0; i < quiz.length; i++) {
+        const q = quiz[i];
+        if (q.platform === 'openshift') {
+          if (await askSelection(q, i + 1, quiz.length, 'Fill in the Blank') === null) return mainMenu();
+          continue;
+        }
+        term.writeln('\r\n' + C.prompt + q.question + C.reset);
+        q.choices.forEach((choice, index) => term.writeln((index + 1) + ') ' + choice));
+        let selection;
+        while (true) {
+          term.write('\r\nSelection (1–4, or menu): ');
+          const text = (await readLine()).trim(); if (text.toLowerCase() === 'menu') return mainMenu();
+          selection = Number(text) - 1;
+          if (Number.isInteger(selection) && selection >= 0 && selection < q.choices.length) break;
+          term.writeln('Invalid selection.');
+        }
+        if (q.choices[selection] === q.answer) { term.writeln(C.ok + 'Correct!' + C.reset); answeredCorrect++; updateStatus(); }
+        else { term.writeln(C.bad + 'Wrong. Answer: ' + q.answer + C.reset); }
+      }
+      return finishScore(quiz.length);
+    }
+    async function topicDrill() {
+      term.writeln('\r\nChoose a topic:'); topics.forEach((topic, index) => term.writeln((index + 1) + ') ' + topic));
+      term.write('\r\nSelection (or menu): ');
+      const text = (await readLine()).trim(); if (text.toLowerCase() === 'menu') return mainMenu();
+      const topic = topics[Number(text) - 1];
+      if (!topic) { term.writeln('Invalid topic.'); return mainMenu(); }
+      const level = topic.startsWith('OpenShift: ') ? await chooseDifficulty() : 'all';
+      if (!level) return mainMenu();
+      return askLoop(shuffle(meta.filter(q => q.topic === topic && (level === 'all' || q.difficulty === level))), 'Topic drill');
+    }
+    async function mainMenu() {
+      term.writeln('\r\n' + C.prompt + 'Red Hat Browser Practice' + C.reset + '\r\n1) Full RHCSA Practice Exam\r\n2) Topic Drill — RHCSA & OpenShift\r\n3) Quick-fire 10 — RHCSA & OpenShift\r\n4) Fill in the Blank Quiz — RHCSA & OpenShift\r\nq) Quit');
+      term.write('\r\nSelect option: ');
+      const choice = (await readLine()).trim().toLowerCase();
+      if (choice === '1') return fullExam();
+      if (choice === '2') return topicDrill();
+      if (choice === '3') return quickFire();
+      if (choice === '4') return fillBlankQuiz();
+      if (choice === 'q') { term.writeln('Goodbye'); return; }
+      term.writeln('Invalid selection.'); return mainMenu();
+    }
+    mainMenu();
+  })();
+  </script>
+</body>
+</html>
